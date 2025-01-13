@@ -1,5 +1,6 @@
 # Localized
-### Manage your localizable string files easily with a simple Swift macro 😎 ### 
+
+Manage your localizable string files easily with a simple Swift macro 😎
 
  An enum-only macro that computes a localized `String` property, using the enum cases as the keys used in our localization files.
 
