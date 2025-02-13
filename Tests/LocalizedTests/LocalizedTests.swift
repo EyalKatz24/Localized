@@ -305,4 +305,165 @@ final class LocalizedTests: XCTestCase {
         )
         #endif
     }
+    
+    func testCamelCaseParameter() {
+        #if canImport(LocalizedMacros)
+        assertMacroExpansion(
+            """
+            @Localized(keyFormat: .camelCase)
+            enum Localization {
+                case a
+                case A
+                case Aa
+                case url
+                case URl
+                case URL
+                case no_i_regretted
+            }
+            """,
+            expandedSource:
+            """
+            enum Localization {
+                case a
+                case A
+                case Aa
+                case url
+                case URl
+                case URL
+                case no_i_regretted
+            
+                public var localized: String {
+                    switch self {
+                    case .a:
+                        localized("a")
+                    case .A:
+                        localized("a")
+                    case .Aa:
+                        localized("aa")
+                    case .url:
+                        localized("url")
+                    case .URl:
+                        localized("uRl")
+                    case .URL:
+                        localized("uRL")
+                    case .no_i_regretted:
+                        localized("noIRegretted")
+                    }
+                }
+            
+                private func localized(_ string: String) -> String {
+                    NSLocalizedString(string, comment: "")
+                }
+            }
+            """,
+            macros: testMacros
+        )
+        #endif
+    }
+    
+    func testPascalCaseParameter() {
+        #if canImport(LocalizedMacros)
+        assertMacroExpansion(
+            """
+            @Localized(keyFormat: .pascalCase)
+            enum Localization {
+                case a
+                case A
+                case Aa
+                case url
+                case URl
+                case URL
+                case no_i_regretted
+            }
+            """,
+            expandedSource:
+            """
+            enum Localization {
+                case a
+                case A
+                case Aa
+                case url
+                case URl
+                case URL
+                case no_i_regretted
+            
+                public var localized: String {
+                    switch self {
+                    case .a:
+                        localized("A")
+                    case .A:
+                        localized("A")
+                    case .Aa:
+                        localized("Aa")
+                    case .url:
+                        localized("Url")
+                    case .URl:
+                        localized("URl")
+                    case .URL:
+                        localized("URL")
+                    case .no_i_regretted:
+                        localized("NoIRegretted")
+                    }
+                }
+            
+                private func localized(_ string: String) -> String {
+                    NSLocalizedString(string, comment: "")
+                }
+            }
+            """,
+            macros: testMacros
+        )
+        #endif
+    }
+    
+    func testLowerSnakeCaseParameter() {
+        #if canImport(LocalizedMacros)
+        assertMacroExpansion(
+            """
+            @Localized(keyFormat: .lowerSnakeCase)
+            enum Localization {
+                case a
+                case a1
+                case a2345
+                case ab8th9
+                case c0cDdd4d
+                case ABC6
+            }
+            """,
+            expandedSource:
+            """
+            enum Localization {
+                case a
+                case a1
+                case a2345
+                case ab8th9
+                case c0cDdd4d
+                case ABC6
+            
+                public var localized: String {
+                    switch self {
+                    case .a:
+                        localized("a")
+                    case .a1:
+                        localized("a1")
+                    case .a2345:
+                        localized("a2345")
+                    case .ab8th9:
+                        localized("ab8th9")
+                    case .c0cDdd4d:
+                        localized("c0c_ddd4d")
+                    case .ABC6:
+                        localized("a_b_c6")
+                    }
+                }
+            
+                private func localized(_ string: String) -> String {
+                    NSLocalizedString(string, comment: "")
+                }
+            }
+            """,
+            macros: testMacros
+        )
+        #endif
+    }
 }

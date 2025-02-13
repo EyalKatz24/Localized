@@ -7,7 +7,7 @@
 /// however breaking some localizations into separated enums might be useful in some scenarios,
 /// such as localization enum for alerts only.
 ///
-/// Usage example::
+/// Usage example:
 ///```swift
 /// @Localized
 /// enum Localization {
@@ -41,4 +41,22 @@
 /// }
 ///```
 @attached(member, names: arbitrary)
-public macro Localized() = #externalMacro(module: "LocalizedMacros", type: "LocalizedMacro")
+public macro Localized(keyFormat: LocalizationKeyFormat = .upperSnakeCase) = #externalMacro(module: "LocalizedMacros", type: "LocalizedMacro")
+
+/// The key format used in the keys in your localization file.
+///
+/// The default value used is `.upperSnakeCase`.
+public enum LocalizationKeyFormat {
+    
+    /// Converts the `@localized` attached enum into `lower_snake_cased` localization key.
+    case lowerSnakeCase
+    
+    /// Converts the `@localized` attached enum into `UPPER_SNAKE_CASED` localization key.
+    case upperSnakeCase
+    
+    /// Converts the `@localized` attached enum into `camelCased` localization key.
+    case camelCase
+    
+    /// Converts the `@localized` attached enum into `PascalCased` localization key.
+    case pascalCase
+}
