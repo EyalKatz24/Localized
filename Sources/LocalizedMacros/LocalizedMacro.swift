@@ -16,10 +16,15 @@ public struct LocalizedMacro: MemberMacro {
         }
         
         var keyFormat = "upperSnakeCase"
+        var bundleId: String?
         
         if case let .argumentList(arguments) = node.arguments {
             if let keyFormatFromArgument = arguments.first(where: { $0.label?.identifier?.name == "keyFormat" })?.expression.as(MemberAccessExprSyntax.self)?.description.removing(".") {
                 keyFormat = keyFormatFromArgument
+            }
+            
+            if let bundleIdFromArgument = arguments.first(where: { $0.label?.identifier?.name == "bundleId" })?.expression.as(StringLiteralExprSyntax.self)?.description {
+                bundleId = bundleIdFromArgument
             }
         }
         
@@ -28,7 +33,7 @@ public struct LocalizedMacro: MemberMacro {
         let elements = caseDecls.flatMap { $0.elements }
         
         let localizedVar = try localizedVariableDecl(with: elements, keyFormat: keyFormat)
-        let localizeFuncDecl = try localizeFuncionDecl()
+        let localizeFuncDecl = try localizeFuncionDecl(bundleId: bundleId)
         
         return [
             DeclSyntax(localizedVar),
@@ -37,11 +42,20 @@ public struct LocalizedMacro: MemberMacro {
     }
     
     /// This localized function is used instead of explicit initializer, so it can be modified in the future if needed
-    private static func localizeFuncionDecl() throws -> FunctionDeclSyntax {
-        try FunctionDeclSyntax("private func localized(_ string: String) -> String") {
-            """
-            NSLocalizedString(string, comment: "")
-            """
+    private static func localizeFuncionDecl(bundleId: String?) throws -> FunctionDeclSyntax {
+        if let bundleId {
+            try FunctionDeclSyntax("private func localized(_ string: String) -> String") {
+               """
+               let bundle = Bundle(identifier: \(raw: bundleId)) ?? .main
+                   return NSLocalizedString(string, bundle: bundle, comment: "")
+               """
+            }
+        }else {
+            try FunctionDeclSyntax("private func localized(_ string: String) -> String") {
+                """
+                NSLocalizedString(string, comment: "")
+                """
+            }
         }
     }
     

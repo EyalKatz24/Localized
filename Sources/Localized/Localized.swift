@@ -41,7 +41,7 @@
 /// }
 ///```
 @attached(member, names: arbitrary)
-public macro Localized(keyFormat: LocalizationKeyFormat = .upperSnakeCase) = #externalMacro(module: "LocalizedMacros", type: "LocalizedMacro")
+public macro Localized(keyFormat: LocalizationKeyFormat = .upperSnakeCase, bundleId: String? = nil) = #externalMacro(module: "LocalizedMacros", type: "LocalizedMacro")
 
 /// The key format used in the keys in your localization file.
 ///
