@@ -5,7 +5,7 @@
 ///
 /// - parameter keyFormat: The localization key format used in your localizable files. The default value is `.upperSnakeCase`.
 ///
-/// - parameter bundleId: An optional bundle identifier where your localizable files are located in. If not supplied or failed to read the bundle with the given value, the `.main` bundle will be used.
+/// - parameter bundleId: An optional bundle identifier where your localizable files are located in. If not supplied or failed to read the bundle with the given value, the `.main` bundle will be used. Make sure to expand the macro to review the implementation. If you use a `Bundle` implicit member such as `.module`, you should provide the unwrapped identifier value for example: `@Localized(keyFormat: .camelCase, bundleId: "\(Bundle.module.bundleIdentifier!)")`
 ///
 /// - NOTE: Use the macro wisely, the best practice would be using a main localization enum,
 /// however breaking some localizations into separated enums might be useful in some scenarios,
