@@ -466,4 +466,76 @@ final class LocalizedTests: XCTestCase {
         )
         #endif
     }
+    
+    func testBundleParameter() {
+        #if canImport(LocalizedMacros)
+        assertMacroExpansion(
+            """
+            @Localized(bundleId: "core.Core.resources")
+            enum Localization {
+                case hello
+                case loveYou
+            }
+            """,
+            expandedSource:
+            """
+            enum Localization {
+                case hello
+                case loveYou
+            
+                public var localized: String {
+                    switch self {
+                    case .hello:
+                        localized("HELLO")
+                    case .loveYou:
+                        localized("LOVE_YOU")
+                    }
+                }
+            
+                private func localized(_ string: String) -> String {
+                    let bundle = Bundle(identifier: "core.Core.resources") ?? .main
+                    return NSLocalizedString(string, bundle: bundle, comment: "")
+                }
+            }
+            """,
+            macros: testMacros
+        )
+        #endif
+    }
+    
+    func testLowerSnakeCaseAndBundleParameters() {
+        #if canImport(LocalizedMacros)
+        assertMacroExpansion(
+            """
+            @Localized(keyFormat: .lowerSnakeCase, bundleId: "core.Core.resources")
+            enum Localization {
+                case hello
+                case loveYou
+            }
+            """,
+            expandedSource:
+            """
+            enum Localization {
+                case hello
+                case loveYou
+            
+                public var localized: String {
+                    switch self {
+                    case .hello:
+                        localized("hello")
+                    case .loveYou:
+                        localized("love_you")
+                    }
+                }
+            
+                private func localized(_ string: String) -> String {
+                    let bundle = Bundle(identifier: "core.Core.resources") ?? .main
+                    return NSLocalizedString(string, bundle: bundle, comment: "")
+                }
+            }
+            """,
+            macros: testMacros
+        )
+        #endif
+    }
 }
