@@ -3,6 +3,10 @@
 /// Each enum case is converted to upper-snake-cased petterned string, represents a localization key in the provided `.localizable` files.
 /// The use of `enum` associated values simplifies the `String` formatting API, as each of them is used as an argument passed to the `String(format:)` initializer.
 ///
+/// - parameter keyFormat: The localization key format used in your localizable files. The default value is `.upperSnakeCase`.
+///
+/// - parameter bundleId: An optional bundle identifier where your localizable files are located in. If not supplied or failed to read the bundle with the given value, the `.main` bundle will be used.
+///
 /// - NOTE: Use the macro wisely, the best practice would be using a main localization enum,
 /// however breaking some localizations into separated enums might be useful in some scenarios,
 /// such as localization enum for alerts only.
