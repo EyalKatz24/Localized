@@ -33,7 +33,7 @@ public struct LocalizedMacro: MemberMacro {
         let caseDecls = members.compactMap { $0.decl.as(EnumCaseDeclSyntax.self) }
         let elements = caseDecls.flatMap { $0.elements }
         
-        checkForKeyConflicts(elements, keyFormat, context, declaration)
+        checkForKeyConflicts(with: elements, keyFormat: keyFormat, context: context, declaration: declaration)
         
         let localizedVar = try localizedVariableDecl(with: elements, keyFormat: keyFormat)
         let localizeFuncDecl = try localizeFuncionDecl(bundleId: bundleId)
@@ -46,7 +46,7 @@ public struct LocalizedMacro: MemberMacro {
         ]
     }
     
-    private static func checkForKeyConflicts(_ elements: [EnumCaseElementListSyntax.Element], _ keyFormat: String, _ context: some MacroExpansionContext, _ declaration: some DeclGroupSyntax) {
+    private static func checkForKeyConflicts(with elements: [EnumCaseElementListSyntax.Element], keyFormat: String, context: some MacroExpansionContext, declaration: some DeclGroupSyntax) {
         var dictionary = [String: String]()
         for element in elements {
             let key = element.name.toLocalizedKey(keyFormat)
