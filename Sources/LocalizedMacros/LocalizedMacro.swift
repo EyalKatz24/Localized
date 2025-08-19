@@ -5,6 +5,7 @@ import SwiftSyntaxMacros
 import Foundation
 
 public struct LocalizedMacro: MemberMacro {
+
     public static func expansion(
         of node: AttributeSyntax,
         providingMembersOf declaration: some DeclGroupSyntax,
@@ -32,13 +33,29 @@ public struct LocalizedMacro: MemberMacro {
         let caseDecls = members.compactMap { $0.decl.as(EnumCaseDeclSyntax.self) }
         let elements = caseDecls.flatMap { $0.elements }
         
+        checkForKeyConflicts(with: elements, keyFormat: keyFormat, context: context, declaration: declaration)
+        
         let localizedVar = try localizedVariableDecl(with: elements, keyFormat: keyFormat)
         let localizeFuncDecl = try localizeFuncionDecl(bundleId: bundleId)
+        let localizedKeyVar = try localizedKeyVariableDecl(with: elements, keyFormat: keyFormat)
         
         return [
             DeclSyntax(localizedVar),
-            DeclSyntax(localizeFuncDecl)
+            DeclSyntax(localizeFuncDecl),
+            DeclSyntax(localizedKeyVar)
         ]
+    }
+    
+    private static func checkForKeyConflicts(with elements: [EnumCaseElementListSyntax.Element], keyFormat: String, context: some MacroExpansionContext, declaration: some DeclGroupSyntax) {
+        var dictionary = [String: String]()
+        for element in elements {
+            let key = element.name.toLocalizedKey(keyFormat)
+            if let existingCase = dictionary[key] {
+                context.diagnose(.keyConflict(firstCase: existingCase, secondCase: element.name.description), with: declaration)
+            } else {
+                dictionary[key] = element.name.description
+            }
+        }
     }
     
     /// This localized function is used instead of explicit initializer, so it can be modified in the future if needed
@@ -50,7 +67,7 @@ public struct LocalizedMacro: MemberMacro {
                    return NSLocalizedString(string, bundle: bundle, comment: "")
                """
             }
-        }else {
+        } else {
             try FunctionDeclSyntax("private func localized(_ string: String) -> String") {
                 """
                 NSLocalizedString(string, comment: "")
@@ -64,6 +81,21 @@ public struct LocalizedMacro: MemberMacro {
             try SwitchExprSyntax("switch self") {
                 for element in elements {
                     caseSyntax(for: element, keyFormat: keyFormat)
+                }
+            }
+        }
+    }
+    
+    private static func localizedKeyVariableDecl(with elements: [EnumCaseElementListSyntax.Element], keyFormat: String) throws -> VariableDeclSyntax {
+        try VariableDeclSyntax("public var localizedKey: String") {
+            try SwitchExprSyntax("switch self") {
+                for element in elements {
+                    SwitchCaseSyntax(
+                    """
+                    case .\(element.name):
+                        "\(raw: "\(element.name.toLocalizedKey(keyFormat))")"
+                    """
+                    )
                 }
             }
         }

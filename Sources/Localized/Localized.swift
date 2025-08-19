@@ -1,66 +1,140 @@
-/// An enum-only macro that computes a localized `String` property, using the enum cases as the keys used in our localization files.
+/// A Swift macro that automatically generates localized string properties for enums.
 ///
-/// Each enum case is converted to upper-snake-cased petterned string, represents a localization key in the provided `.localizable` files.
-/// The use of `enum` associated values simplifies the `String` formatting API, as each of them is used as an argument passed to the `String(format:)` initializer.
+/// This macro converts enum cases to localization keys and generates:
+/// - A `localized` property that returns the localized string
+/// - A `localizedKey` property that returns the localization key
+/// - A private `localized(_:)` function for internal use
 ///
-/// - parameter keyFormat: The localization key format used in your localizable files. The default value is `.upperSnakeCase`.
+/// ## Key Features
+/// - **Type-safe localization**: Convert enum cases to localization keys automatically
+/// - **Multiple key formats**: Support for upper snake case, lower snake case, camel case, and Pascal case
+/// - **String formatting**: Automatic handling of associated values for string interpolation
+/// - **Bundle support**: Custom bundle support for modular apps
+/// - **Compile-time validation**: Detect key conflicts and invalid usage at compile time
 ///
-/// - parameter bundleId: An optional bundle identifier where your localizable files are located in. If not supplied or failed to read the bundle with the given value, the `.main` bundle will be used. Make sure to expand the macro to review the implementation. If you use a `Bundle` implicit member such as `.module`, you should provide the unwrapped identifier value for example: `@Localized(keyFormat: .camelCase, bundleId: "\(Bundle.module.bundleIdentifier!)")`
+/// ## Parameters
+/// - `keyFormat`: The localization key format used in your localizable files. The default value is `.upperSnakeCase`.
+/// - `bundleId`: An optional bundle identifier where your localizable files are located. If not supplied or failed to read the bundle with the given value, the `.main` bundle will be used.
 ///
-/// - NOTE: Use the macro wisely, the best practice would be using a main localization enum,
-/// however breaking some localizations into separated enums might be useful in some scenarios,
-/// such as localization enum for alerts only.
+/// ## Usage Examples
 ///
-/// Usage example:
-///```swift
+/// ### Basic Usage
+/// ```swift
 /// @Localized
 /// enum Localization {
 ///     case ok
-///     case myPartnerIs(partnerName: String)
-///     case totalCost(firstAmount: Double, secondAmount: Double, cashierName: String)
+///     case cancel
+///     case welcome
+///     case goodbye
 /// }
-///```
-/// The macro `Localized` after macro expansion:
-///```swift
+/// ```
+///
+/// ### With Associated Values
+/// ```swift
 /// @Localized
 /// enum Localization {
-///     case ok
-///     case myPartnerIs(partnerName: String)
-///     case totalCost(firstAmount: Double, secondAmount: Double, cashierName: String)
+///     case welcome(name: String)
+///     case totalCost(amount: Double, currency: String)
+///     case items(count: Int, itemName: String)
+/// }
+/// ```
 ///
+/// ### Custom Key Format
+/// ```swift
+/// @Localized(keyFormat: .camelCase)
+/// enum Localization {
+///     case helloWorld // Becomes "helloWorld"
+///     case welcomeMessage // Becomes "welcomeMessage"
+/// }
+/// ```
+///
+/// ### Custom Bundle
+/// ```swift
+/// @Localized(bundleId: "com.myapp.core")
+/// enum CoreLocalization {
+///     case welcome
+///     case error
+/// }
+/// ```
+///
+/// ### Swift Package with Bundle.module
+/// ```swift
+/// @Localized(bundleId: "\(Bundle.module.bundleIdentifier!)")
+/// enum PackageLocalization {
+///     case packageSpecific
+/// }
+/// ```
+///
+/// ## Generated Code
+/// The macro generates the following code for each enum:
+/// ```swift
+/// @Localized
+/// enum Localization {
+///     case welcome(name: String)
+///     case goodbye
+///     
 ///     public var localized: String {
 ///         switch self {
-///         case .ok:
-///             localized("OK")
-///         case let .myPartnerInfo(value0):
-///             String(format: localized("MY_PARTNER_INFO"), value0)
-///         case let .totalCost(value0, value1, value2):
-///             String(format: localized("TOTAL_COST"), value0, value1, value2)
+///         case let .welcome(value0):
+///             String(format: localized("WELCOME"), value0)
+///         case .goodbye:
+///             localized("GOODBYE")
 ///         }
 ///     }
-///
+///     
+///     public var localizedKey: String {
+///         switch self {
+///         case .welcome:
+///             "WELCOME"
+///         case .goodbye:
+///             "GOODBYE"
+///         }
+///     }
+///     
 ///     private func localized(_ string: String) -> String {
 ///         NSLocalizedString(string, comment: "")
 ///     }
 /// }
-///```
+/// ```
+///
+/// ## Best Practices
+/// - Use descriptive enum case names that clearly represent the localization key
+/// - Organize localizations by feature rather than having one large enum
+/// - Use associated values for dynamic content that needs string formatting
+/// - Handle special characters and reserved words with backticks when necessary
+///
+/// ## Error Handling
+/// The macro provides compile-time validation for:
+/// - Key conflicts when different cases produce the same localization key
+/// - Invalid usage on non-enum types
+/// - Bundle identifier validation
 @attached(member, names: arbitrary)
 public macro Localized(keyFormat: LocalizationKeyFormat = .upperSnakeCase, bundleId: String? = nil) = #externalMacro(module: "LocalizedMacros", type: "LocalizedMacro")
 
-/// The key format used in the keys in your localization file.
+/// The key format used for converting enum cases to localization keys.
 ///
-/// The default value used is `.upperSnakeCase`.
+/// This enum defines the different formatting options available for generating
+/// localization keys from enum case names.
 public enum LocalizationKeyFormat {
     
-    /// Converts the `@localized` attached enum into `lower_snake_cased` localization key.
+    /// Converts enum cases to `lower_snake_cased` localization keys.
+    /// 
+    /// Example: `helloWorld` → `"hello_world"`
     case lowerSnakeCase
     
-    /// Converts the `@localized` attached enum into `UPPER_SNAKE_CASED` localization key.
+    /// Converts enum cases to `UPPER_SNAKE_CASED` localization keys.
+    /// 
+    /// This is the default format.
+    /// Example: `helloWorld` → `"HELLO_WORLD"`
     case upperSnakeCase
     
-    /// Converts the `@localized` attached enum into `camelCased` localization key.
+    /// Converts enum cases to `camelCased` localization keys.
+    /// 
+    /// Example: `hello_world` → `"helloWorld"`
     case camelCase
     
-    /// Converts the `@localized` attached enum into `PascalCased` localization key.
+    /// Converts enum cases to `PascalCased` localization keys.
+    /// 
+    /// Example: `hello_world` → `"HelloWorld"`
     case pascalCase
 }
