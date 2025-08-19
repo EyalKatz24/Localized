@@ -34,10 +34,12 @@ public struct LocalizedMacro: MemberMacro {
         
         let localizedVar = try localizedVariableDecl(with: elements, keyFormat: keyFormat)
         let localizeFuncDecl = try localizeFuncionDecl(bundleId: bundleId)
+        let localizedKeyVar = try localizedKeyVariableDecl(with: elements, keyFormat: keyFormat)
         
         return [
             DeclSyntax(localizedVar),
-            DeclSyntax(localizeFuncDecl)
+            DeclSyntax(localizeFuncDecl),
+            DeclSyntax(localizedKeyVar)
         ]
     }
     
@@ -50,7 +52,7 @@ public struct LocalizedMacro: MemberMacro {
                    return NSLocalizedString(string, bundle: bundle, comment: "")
                """
             }
-        }else {
+        } else {
             try FunctionDeclSyntax("private func localized(_ string: String) -> String") {
                 """
                 NSLocalizedString(string, comment: "")
@@ -64,6 +66,21 @@ public struct LocalizedMacro: MemberMacro {
             try SwitchExprSyntax("switch self") {
                 for element in elements {
                     caseSyntax(for: element, keyFormat: keyFormat)
+                }
+            }
+        }
+    }
+    
+    private static func localizedKeyVariableDecl(with elements: [EnumCaseElementListSyntax.Element], keyFormat: String) throws -> VariableDeclSyntax {
+        try VariableDeclSyntax("public var localizedKey: String") {
+            try SwitchExprSyntax("switch self") {
+                for element in elements {
+                    SwitchCaseSyntax(
+                    """
+                    case .\(element.name):
+                        "\(raw: "\(element.name.toLocalizedKey(keyFormat))")"
+                    """
+                    )
                 }
             }
         }
