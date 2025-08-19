@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  LocalizedMacroDiagnostic.swift
+//
 //
 //  Created by Eyal Katz on 15/12/2024.
 //
@@ -11,6 +11,7 @@ import SwiftSyntaxMacros
 
 enum LocalizedMacroDiagnostic {
     case notAnEnum
+    case keyConflict(firstCase: String, secondCase: String)
 }
 
 extension LocalizedMacroDiagnostic: DiagnosticMessage {
@@ -27,7 +28,9 @@ extension LocalizedMacroDiagnostic: DiagnosticMessage {
     var message: String {
         switch self {
         case .notAnEnum:
-            return "'Localized' macro can only be attached to enums"
+            "'Localized' macro can only be attached to enums"
+        case let .keyConflict(firstCase, secondCase):
+            "Localization key conflict: '\(firstCase)' and '\(secondCase)'"
         }
     }
 }

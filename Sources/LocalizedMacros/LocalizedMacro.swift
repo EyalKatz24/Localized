@@ -5,6 +5,7 @@ import SwiftSyntaxMacros
 import Foundation
 
 public struct LocalizedMacro: MemberMacro {
+
     public static func expansion(
         of node: AttributeSyntax,
         providingMembersOf declaration: some DeclGroupSyntax,
@@ -32,6 +33,8 @@ public struct LocalizedMacro: MemberMacro {
         let caseDecls = members.compactMap { $0.decl.as(EnumCaseDeclSyntax.self) }
         let elements = caseDecls.flatMap { $0.elements }
         
+        checkForKeyConflicts(elements, keyFormat, context, declaration)
+        
         let localizedVar = try localizedVariableDecl(with: elements, keyFormat: keyFormat)
         let localizeFuncDecl = try localizeFuncionDecl(bundleId: bundleId)
         let localizedKeyVar = try localizedKeyVariableDecl(with: elements, keyFormat: keyFormat)
@@ -41,6 +44,18 @@ public struct LocalizedMacro: MemberMacro {
             DeclSyntax(localizeFuncDecl),
             DeclSyntax(localizedKeyVar)
         ]
+    }
+    
+    private static func checkForKeyConflicts(_ elements: [EnumCaseElementListSyntax.Element], _ keyFormat: String, _ context: some MacroExpansionContext, _ declaration: some DeclGroupSyntax) {
+        var dictionary = [String: String]()
+        for element in elements {
+            let key = element.name.toLocalizedKey(keyFormat)
+            if let existingCase = dictionary[key] {
+                context.diagnose(.keyConflict(firstCase: existingCase, secondCase: element.name.description), with: declaration)
+            } else {
+                dictionary[key] = element.name.description
+            }
+        }
     }
     
     /// This localized function is used instead of explicit initializer, so it can be modified in the future if needed

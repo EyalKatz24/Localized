@@ -5,7 +5,7 @@ import SwiftSyntaxMacrosTestSupport
 import XCTest
 
 #if canImport(LocalizedMacros)
-import LocalizedMacros
+@testable import LocalizedMacros
 
 let testMacros: [String: Macro.Type] = [
     "Localized": LocalizedMacro.self
@@ -74,7 +74,7 @@ final class LocalizedTests: XCTestCase {
             @Localized
             enum Localization {
                 case a
-                case A
+                case A2B
                 case Aa
                 case ok
                 case url
@@ -87,7 +87,7 @@ final class LocalizedTests: XCTestCase {
             """
             enum Localization {
                 case a
-                case A
+                case A2B
                 case Aa
                 case ok
                 case url
@@ -99,8 +99,8 @@ final class LocalizedTests: XCTestCase {
                     switch self {
                     case .a:
                         localized("A")
-                    case .A:
-                        localized("A")
+                    case .A2B:
+                        localized("A2_B")
                     case .Aa:
                         localized("AA")
                     case .ok:
@@ -124,8 +124,8 @@ final class LocalizedTests: XCTestCase {
                     switch self {
                     case .a:
                         "A"
-                    case .A:
-                        "A"
+                    case .A2B:
+                        "A2_B"
                     case .Aa:
                         "AA"
                     case .ok:
@@ -406,7 +406,7 @@ final class LocalizedTests: XCTestCase {
             @Localized(keyFormat: .camelCase)
             enum Localization {
                 case a
-                case A
+                case A2B
                 case Aa
                 case url
                 case URl
@@ -418,7 +418,7 @@ final class LocalizedTests: XCTestCase {
             """
             enum Localization {
                 case a
-                case A
+                case A2B
                 case Aa
                 case url
                 case URl
@@ -429,8 +429,8 @@ final class LocalizedTests: XCTestCase {
                     switch self {
                     case .a:
                         localized("a")
-                    case .A:
-                        localized("a")
+                    case .A2B:
+                        localized("a2B")
                     case .Aa:
                         localized("aa")
                     case .url:
@@ -452,8 +452,8 @@ final class LocalizedTests: XCTestCase {
                     switch self {
                     case .a:
                         "a"
-                    case .A:
-                        "a"
+                    case .A2B:
+                        "a2B"
                     case .Aa:
                         "aa"
                     case .url:
@@ -480,7 +480,7 @@ final class LocalizedTests: XCTestCase {
             @Localized(keyFormat: .pascalCase)
             enum Localization {
                 case a
-                case A
+                case A2B
                 case Aa
                 case url
                 case URl
@@ -492,7 +492,7 @@ final class LocalizedTests: XCTestCase {
             """
             enum Localization {
                 case a
-                case A
+                case A2B
                 case Aa
                 case url
                 case URl
@@ -503,8 +503,8 @@ final class LocalizedTests: XCTestCase {
                     switch self {
                     case .a:
                         localized("A")
-                    case .A:
-                        localized("A")
+                    case .A2B:
+                        localized("A2B")
                     case .Aa:
                         localized("Aa")
                     case .url:
@@ -526,8 +526,8 @@ final class LocalizedTests: XCTestCase {
                     switch self {
                     case .a:
                         "A"
-                    case .A:
-                        "A"
+                    case .A2B:
+                        "A2B"
                     case .Aa:
                         "Aa"
                     case .url:
@@ -696,6 +696,197 @@ final class LocalizedTests: XCTestCase {
                         "hello"
                     case .loveYou:
                         "love_you"
+                    }
+                }
+            }
+            """,
+            macros: testMacros
+        )
+        #endif
+    }
+    
+    func testSpecialCharactersInEnumCases() {
+        #if canImport(LocalizedMacros)
+        assertMacroExpansion(
+            """
+            @Localized
+            enum Localization {
+                case hello_world
+                case good_morning
+                case good_night
+            }
+            """,
+            expandedSource:
+            """
+            enum Localization {
+                case hello_world
+                case good_morning
+                case good_night
+            
+                public var localized: String {
+                    switch self {
+                    case .hello_world:
+                        localized("HELLO_WORLD")
+                    case .good_morning:
+                        localized("GOOD_MORNING")
+                    case .good_night:
+                        localized("GOOD_NIGHT")
+                    }
+                }
+            
+                private func localized(_ string: String) -> String {
+                    NSLocalizedString(string, comment: "")
+                }
+
+                public var localizedKey: String {
+                    switch self {
+                    case .hello_world:
+                        "HELLO_WORLD"
+                    case .good_morning:
+                        "GOOD_MORNING"
+                    case .good_night:
+                        "GOOD_NIGHT"
+                    }
+                }
+            }
+            """,
+            macros: testMacros
+        )
+        #endif
+    }
+
+    func testMixedCaseFormats() {
+        #if canImport(LocalizedMacros)
+        assertMacroExpansion(
+            """
+            @Localized
+            enum Localization {
+                case camelCaseMixed
+                case PascalCaseMixed
+            }
+            """,
+            expandedSource:
+            """
+            enum Localization {
+                case camelCaseMixed
+                case PascalCaseMixed
+            
+                public var localized: String {
+                    switch self {
+                    case .camelCaseMixed:
+                        localized("CAMEL_CASE_MIXED")
+                    case .PascalCaseMixed:
+                        localized("PASCAL_CASE_MIXED")
+                    }
+                }
+            
+                private func localized(_ string: String) -> String {
+                    NSLocalizedString(string, comment: "")
+                }
+
+                public var localizedKey: String {
+                    switch self {
+                    case .camelCaseMixed:
+                        "CAMEL_CASE_MIXED"
+                    case .PascalCaseMixed:
+                        "PASCAL_CASE_MIXED"
+                    }
+                }
+            }
+            """,
+            macros: testMacros
+        )
+        #endif
+    }
+
+    func testDuplicateKeys() {
+        #if canImport(LocalizedMacros)
+        assertMacroExpansion(
+            """
+            @Localized(keyFormat: .pascalCase)
+            enum Localization {
+                case duplicate
+                case Duplicate
+            }
+            """,
+            expandedSource:
+            """
+            enum Localization {
+                case duplicate
+                case Duplicate
+            
+                public var localized: String {
+                    switch self {
+                    case .duplicate:
+                        localized("Duplicate")
+                    case .Duplicate:
+                        localized("Duplicate")
+                    }
+                }
+            
+                private func localized(_ string: String) -> String {
+                    NSLocalizedString(string, comment: "")
+                }
+
+                public var localizedKey: String {
+                    switch self {
+                    case .duplicate:
+                        "Duplicate"
+                    case .Duplicate:
+                        "Duplicate"
+                    }
+                }
+            }
+            """,
+            diagnostics: [
+                .init(message: "Localization key conflict: 'duplicate' and 'Duplicate'", line: 1, column: 1)
+            ],
+            macros: testMacros
+        )
+        #endif
+    }
+
+    func testReservedWords() {
+        #if canImport(LocalizedMacros)
+        assertMacroExpansion(
+            """
+            @Localized
+            enum Localization {
+                case `class`
+                case `struct`
+                case `enum`
+            }
+            """,
+            expandedSource:
+            """
+            enum Localization {
+                case `class`
+                case `struct`
+                case `enum`
+            
+                public var localized: String {
+                    switch self {
+                    case .`class`:
+                        localized("CLASS")
+                    case .`struct`:
+                        localized("STRUCT")
+                    case .`enum`:
+                        localized("ENUM")
+                    }
+                }
+            
+                private func localized(_ string: String) -> String {
+                    NSLocalizedString(string, comment: "")
+                }
+
+                public var localizedKey: String {
+                    switch self {
+                    case .`class`:
+                        "CLASS"
+                    case .`struct`:
+                        "STRUCT"
+                    case .`enum`:
+                        "ENUM"
                     }
                 }
             }
